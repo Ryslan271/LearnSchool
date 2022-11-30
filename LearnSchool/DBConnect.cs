@@ -15,8 +15,6 @@ namespace LearnSchool
         {
             db = new ServiceEntities();
 
-            db.Client.Load();
-            db.ClientService.Load();
             db.Service.Load();
             db.ServicePhoto.Load();
             db.Role.Load();

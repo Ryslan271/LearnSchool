@@ -30,5 +30,9 @@ namespace LearnSchool
         {
             get => (Discount == 0 || Discount == null) ? Visibility.Collapsed : Visibility.Visible;
         }
+        public string ColorDis
+        {
+            get => (Discount == 0 || Discount == null) ? "#ffffff" : "#D1FFD1";
+        }
     }
 }

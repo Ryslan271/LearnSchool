@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,14 +24,25 @@ namespace LearnSchool.Pages
     public partial class EditServicePage : Page
     {
         #region Свойства
-            public Service EditService { get; set; }
 
-            public ObservableCollection<ServicePhoto> servicePhotos; // все фотографии из ServicePhoto
+        public ObservableCollection<ServicePhoto> servicePhotos; // все фотографии из ServicePhoto
         
-            private int numberListSliderPage = 0; // номер транички для слайдера фото
+        private int numberListSliderPage = 0; // номер транички для слайдера фото
 
-            #region Dependency Propertys
-            public ObservableCollection<ServicePhoto> ServicePhotes
+        #endregion
+
+        #region Dependency Propertys
+
+        public Service EditService
+        {
+            get { return (Service)GetValue(MyPropertyEditService); }
+            set { SetValue(MyPropertyEditService, value); }
+        }
+
+        public static readonly DependencyProperty MyPropertyEditService =
+            DependencyProperty.Register("EditService", typeof(Service), typeof(EditServicePage));
+
+        public ObservableCollection<ServicePhoto> ServicePhotes
             {
                 get { return (ObservableCollection<ServicePhoto>)GetValue(ServicePhotesProperty); }
                 set { SetValue(ServicePhotesProperty, value); }
@@ -37,7 +50,6 @@ namespace LearnSchool.Pages
 
             public static readonly DependencyProperty ServicePhotesProperty =
                 DependencyProperty.Register("ServicePhotes", typeof(ObservableCollection<ServicePhoto>), typeof(EditServicePage));
-            #endregion
 
         #endregion
 
@@ -47,9 +59,27 @@ namespace LearnSchool.Pages
             servicePhotos = DBConnect.db.ServicePhoto.Local;
 
             InitializeComponent();
-            UpdateSliderList();
+            UpdateSliderList(); // обновление слайдера
         }
 
+
+        #region Методы
+
+        #region Обновление слайдера картинок
+        private void UpdateSliderList() 
+            => ServicePhotes = new ObservableCollection<ServicePhoto> (servicePhotos.Skip(3 * numberListSliderPage).Take(3));
+        #endregion
+
+        #region Окно проверки уверенности
+        private bool Ask() => MessageBox.Show("Вы действительно\nхотите сохранить изменения?", "Уведомление",
+                MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
+        #endregion
+
+        #endregion
+
+        #region Обработчики
+
+        #region Сохранение изменений
         private void SaveEditService_Click(object sender, RoutedEventArgs e)
         {
             if (title.Text.Trim() == "" || cost.Text.Trim() == "" || durationInSeconds.Text.Trim() == ""
@@ -59,63 +89,96 @@ namespace LearnSchool.Pages
                 return;
             }
 
+            if (ListServecesPage.Instance.Services.Cast<object>().Select(s => s as Service).Any(x => x.Title.Trim() == Title.Trim()))
+            {
+                MessageBox.Show("Такое название уже занято,\nвыбирай другое и втянись");
+                return;
+            }
+
             if (DBConnect.db.ChangeTracker.HasChanges() == false || Ask() == false)
                 return;
 
             DBConnect.db.SaveChanges();
         }
-
-        #region Методы
-            
-            private void UpdateSliderList() 
-                => ServicePhotes = new ObservableCollection<ServicePhoto> (servicePhotos.Skip(3 * numberListSliderPage).Take(3));
-
         #endregion
 
-        #region Обработчики
-            private void AddImagePage_Click(object sender, RoutedEventArgs e)
+        #region Добавление картинки
+        private void AddImagePage_Click(object sender, RoutedEventArgs e)
+        {
+            ServicePhoto servicePhoto = new ServicePhoto();
+            OpenFileDialog openFile = new OpenFileDialog()
             {
+                Filter = "*.png|*.png|*.jpeg|*.jpeg|*.jpg|*.jpg",
+            };
+            if (openFile.ShowDialog().GetValueOrDefault())
+            {
+                servicePhoto.PhotoPath = File.ReadAllBytes(openFile.FileName);
+                servicePhoto.ServiceID = EditService.ID;
+
+                ServicePhotes.Add(servicePhoto);
+                servicePhotos.Add(servicePhoto);
                 
-            }
+                EditService.MainImagePath = servicePhoto.PhotoPath;
 
-            private void ButtonClickLeftListSlider(object sender, RoutedEventArgs e)
-            {
-                if (numberListSliderPage - 1 < 0)
-                    return;
-
-                numberListSliderPage--;
-                UpdateSliderList();
-            }
-
-            private void ButtonClickRigthListSlider(object sender, RoutedEventArgs e)
-            {
-                if (ListSliderPhoto.Items.Count < 3)
-                    return;
-                numberListSliderPage++;
-                UpdateSliderList();
-            }
-
-            private void ButtonClickEditPhotoService(object sender, RoutedEventArgs e)
-            {
-                if (ListSliderPhoto.SelectedItem == null)
-                    return;
-
-                ServicePhoto photo = ListSliderPhoto.SelectedItem as ServicePhoto;
-
-                DBConnect.db.ServicePhoto.Add(new ServicePhoto
-                {
-                    ServiceID = EditService.ID,
-                    PhotoPath = EditService.MainImagePath
-                });
-
-                EditService.MainImagePath = photo.PhotoPath;
-                ServiceImage.DataContext = photo.PhotoPath;
-                ServicePhotes.Remove(photo);
                 DBConnect.db.SaveChanges();
+
+                UpdateSliderList();
             }
+        }
         #endregion
 
-        private bool Ask() => MessageBox.Show("Вы действительно\nхотите сохранить изменения?", "Уведомление",
-            MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
+        #region Кнопки управление слайдером картинок
+        private void ButtonClickLeftListSlider(object sender, RoutedEventArgs e)
+        {
+            if (numberListSliderPage - 1 < 0)
+                return;
+
+            numberListSliderPage--;
+            UpdateSliderList();
+        }
+
+        private void ButtonClickRigthListSlider(object sender, RoutedEventArgs e)
+        {
+            if (ListSliderPhoto.Items.Count < 3)
+                return;
+
+            numberListSliderPage++;
+            UpdateSliderList();
+        }
+        #endregion
+
+        #region Заменя основного изображения на выбранное
+        private void ButtonClickEditPhotoService(object sender, RoutedEventArgs e)
+        {
+            if (ListSliderPhoto.SelectedItem == null)
+                return;
+
+            ServicePhoto photo = ListSliderPhoto.SelectedItem as ServicePhoto;
+
+            ServicePhoto servicePhoto = new ServicePhoto
+                                        {
+                                            ServiceID = EditService.ID,
+                                            PhotoPath = EditService.MainImagePath
+                                        };
+
+            EditService.MainImagePath = photo.PhotoPath; 
+
+            ServicePhotes.Remove(photo);
+            servicePhotos.Remove(photo);
+
+            if (servicePhoto.PhotoPath != null)
+            {
+                ServicePhotes.Add(servicePhoto);
+                servicePhotos.Add(servicePhoto);
+            }
+
+            DBConnect.db.SaveChanges();
+
+            ListServecesPage.Instance.Services.Refresh();
+        }
+        #endregion
+
+        #endregion
+
     }
 }

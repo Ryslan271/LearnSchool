@@ -31,17 +31,32 @@ namespace LearnSchool
 
             InitializeComponent();
             Instance = this;
-            MyFrame.Navigate(new Pages.LoginPage());
+            MyFrame.Navigate(new Pages.LoginPage()); // открытие окна входа
         }
 
+        #region Обработчики
+
+        #region Кнопка назад
         private void BackBtn_Click(object sender, RoutedEventArgs e) 
         {
-            if (MyFrame.CanGoBack == false)
+            if (MyFrame.CanGoBack == false) 
+            {
+                User = null;
                 return;
+            }
 
             MyFrame.GoBack();
         }
+        #endregion
 
-        private void ExitBtn_Click(object sender, RoutedEventArgs e) => MyFrame.Navigate(new Pages.LoginPage());
+        #region Выход в меню регистрации
+        private void ExitBtn_Click(object sender, RoutedEventArgs e)
+        {
+            User = null;
+            MyFrame.Navigate(new Pages.LoginPage());
+        }
+        #endregion
+
+        #endregion
     }
 }

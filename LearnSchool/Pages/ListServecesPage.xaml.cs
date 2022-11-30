@@ -25,6 +25,7 @@ namespace LearnSchool.Pages
     {
         #region Свойства
 
+        static public ListServecesPage Instance { get; set; }
         public ICollectionView Services { get; set; } // все сервисы
 
         #endregion
@@ -35,32 +36,89 @@ namespace LearnSchool.Pages
 
             InitializeComponent();
 
+            NumberServise.Text = Services.Cast<object>().Count().ToString();
+
+            Instance = this;
+
             FilterAndSearch(); // метод для фильтрации сервисов
             Sorted(); // метод для сортировки сервисов
         }
 
         #region Методы
 
-            #region Метод для фильтрации и поиска
-            private void FilterAndSearch()
+        #region Метод для фильтрации и поиска
+        private void FilterAndSearch()
+        {
+            #region Поиск
+
+            NameDisSearchTb.TextChanged += (s, e) => Services.Refresh();
+
+            Services.Filter += (obj) =>
             {
-                NameDisSearchTb.TextChanged += (s, e) => Services.Refresh();
+                var service = obj as Service;
 
-                Services.Filter += (obj) =>
-                {
-                    var service = obj as Service;
+                var search = NameDisSearchTb.Text;
 
-                    var search = NameDisSearchTb.Text;
+                if (service.Title.Contains(search) || service.Description.Contains(search))
+                    return true;
 
-                    if (service.Title.Contains(search) || service.Description.Contains(search))
-                        return true;
+                NumberServise.Text = Services.Cast<object>().Count().ToString();
 
-                    return false;
-                };
-            }
+                return false;
+            };
             #endregion
 
-            #region Метод сортировки сервисов
+            #region Фильтрация
+
+            FilterServices.SelectionChanged += (s, e) => Services.Refresh();
+
+            Services.Filter += (obj) =>
+            {
+                var service = obj as Service;
+
+                var tag = (FilterServices.SelectedItem as ComboBoxItem).Tag;
+
+                switch (tag)
+                {
+                    case "All":
+                        NumberServise.Text = Services.Cast<object>().Count().ToString();
+                        return true;
+
+                    case "ZeroBeforeFive":
+                        if (service.Discount >= 0 && service.Discount <= 5)
+                            return true;
+                        break;
+
+                    case "FiveBeforeFifteen":
+                        if (service.Discount >= 5 && service.Discount <= 15)
+                            return true;
+                        break;
+
+                    case "FifteenBeforeThirty":
+                        if (service.Discount >= 15 && service.Discount <= 30)
+                            return true;
+                        break;
+
+                    case "ThirtyBeforeSeventy":
+                        if (service.Discount >= 30 && service.Discount <= 70)
+                            return true;
+                        break;
+
+                    case "SeventyBeforeOneHundred":
+                        if (service.Discount >= 70 && service.Discount <= 100)
+                            return true;
+                        break;
+                }
+
+                NumberServise.Text = Services.Cast<object>().Count().ToString();
+
+                return false;
+            };
+            #endregion
+        }
+        #endregion
+
+        #region Метод сортировки сервисов
         private void Sorted()
         {
             SortCb.SelectionChanged += (s, e) =>
@@ -95,6 +153,11 @@ namespace LearnSchool.Pages
         }
         #endregion
 
+        #region Метод для вывода окна взаимодействия
+        private bool Ask() => MessageBox.Show("Вы действительно\nхотите удалить запись?", "Уведомление",
+           MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
+        #endregion
+
         #endregion
 
         #region Обработчики
@@ -106,10 +169,14 @@ namespace LearnSchool.Pages
 
         private void DeleteBtn_Click(object sender, RoutedEventArgs e)
         {
+            if (Ask() != true)
+                return;
+
             Service service = ServiceList.SelectedItem as Service;
             service.IsDelete = true;
             DBConnect.db.SaveChanges();
             Services.Refresh();
+            NumberServise.Text = Services.Cast<object>().Count().ToString();
         }
 
         private void AddServiceBtn_Click(object sender, RoutedEventArgs e) 

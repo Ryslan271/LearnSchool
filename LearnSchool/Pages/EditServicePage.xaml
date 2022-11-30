@@ -19,15 +19,15 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-            <Image Width="200" x:Name="ServiceImage" Source="{Binding EditService.MainImagePath}"/>
+        <StackPanel Margin="0 0 30 0" VerticalAlignment="Center" HorizontalAlignment="Left">
+            <Image Width="200" x:Name="ServiceImage" Source="{Binding Path=EditService.MainImagePath}"/>
             <Button Padding="6" Margin="10 10 10 0" x:Name="AddImagePage" Click="AddImagePage_Click">Добавить изображение</Button>
         </StackPanel>
 
         <StackPanel VerticalAlignment="Center" Grid.Column="1">
             <StackPanel Margin="0 0 0 10" Orientation="Horizontal" HorizontalAlignment="Left">
                 <TextBlock Margin="0 0 10 0">Название</TextBlock>
-                <TextBox x:Name="title" Width="300" Text="{Binding Path=EditService.Title}"/>
+                <TextBox x:Name="title" Width="400" TextWrapping="Wrap" Text="{Binding Path=EditService.Title}"/>
             </StackPanel>
             <StackPanel Margin="0 0 0 10" Orientation="Horizontal" HorizontalAlignment="Left">
                 <TextBlock Margin="0 0 10 0">Цена</TextBlock>

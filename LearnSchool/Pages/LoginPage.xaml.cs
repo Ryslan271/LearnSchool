@@ -20,10 +20,8 @@ namespace LearnSchool.Pages
     /// </summary>
     public partial class LoginPage : Page
     {
-        public LoginPage()
-        {
-            InitializeComponent();
-        }
+        public LoginPage() => InitializeComponent();
+
         private void Entrance_Click(object sender, RoutedEventArgs e)
         {
             User user = DBConnect.db.User.Local.FirstOrDefault(x => x.Login == LoginTb.Text.Trim() && x.Password == PasswordTb.Text.Trim());
