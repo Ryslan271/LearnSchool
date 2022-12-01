@@ -83,9 +83,12 @@ namespace LearnSchool.Pages
         private void SaveEditService_Click(object sender, RoutedEventArgs e)
         {
             if (title.Text.Trim() == "" || cost.Text.Trim() == "" || durationInSeconds.Text.Trim() == ""
-                || description.Text.Trim() == "" || discount.Text.Trim() == "")
+                || description.Text.Trim() == "" || discount.Text.Trim() == "" 
+                || Convert.ToInt32(durationInSeconds.Text) <= 14400)
             {
-                MessageBox.Show("Поля пустые, заполни и потом сохраняй, ЧЕБУПЕЛЬКА");
+                MessageBox.Show("Че то опять не так, либо:\n" +
+                                "* Поля пустые, заполни и потом сохраняй, ЧЕБУПЕЛЬКА\n" +
+                                "* Ты че наделал? Длительность не может быть больше 4 часов");
                 return;
             }
 

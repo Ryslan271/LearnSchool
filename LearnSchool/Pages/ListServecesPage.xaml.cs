@@ -32,10 +32,7 @@ namespace LearnSchool.Pages
 
         public ListServecesPage()
         {
-            Services = new CollectionViewSource
-            {
-                Source = DBConnect.db.Service.Local
-            }.View;
+            Services = new CollectionViewSource {Source = DBConnect.db.Service.Local}.View;
 
             InitializeComponent();
             
@@ -241,10 +238,5 @@ namespace LearnSchool.Pages
         private void AddServiceBtn_Click(object sender, RoutedEventArgs e) 
             => MainWindow.Instance.MyFrame.Navigate(new EditServicePage(new Service()));
         #endregion
-
-        private void SeeDeletedService_Checked(object sender, RoutedEventArgs e)
-        {
-
-        }
     }
 }
