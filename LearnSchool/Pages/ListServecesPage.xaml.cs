@@ -32,12 +32,13 @@ namespace LearnSchool.Pages
 
         public ListServecesPage()
         {
-            Services = new CollectionViewSource { Source = DBConnect.db.Service.Local.Where(x => x.IsDelete != true) }.View;
+            Services = new CollectionViewSource
+            {
+                Source = DBConnect.db.Service.Local
+            }.View;
 
             InitializeComponent();
-
-            NumberServise.Text = Services.Cast<object>().Count().ToString();
-
+            
             Instance = this;
 
             FilterAndSearch(); // метод для фильтрации сервисов
@@ -46,7 +47,7 @@ namespace LearnSchool.Pages
 
         #region Методы
 
-        #region Метод для фильтрации и поиска
+        #region Метод для фильтрации и поиска + проверка на действительность
         private void FilterAndSearch()
         {
             #region Поиск
@@ -62,58 +63,110 @@ namespace LearnSchool.Pages
                 if (service.Title.Contains(search) || service.Description.Contains(search))
                     return true;
 
-                NumberServise.Text = Services.Cast<object>().Count().ToString();
+                NumberServise.Text = Services.Cast<Service>().Count(x => x.IsDelete != true).ToString();
 
                 return false;
             };
             #endregion
 
-            #region Фильтрация
+            #region Фильтрация + проверка на действительность
 
             FilterServices.SelectionChanged += (s, e) => Services.Refresh();
 
-            Services.Filter += (obj) =>
+            if (SeeDeletedService.IsChecked == true)
             {
-                var service = obj as Service;
-
-                var tag = (FilterServices.SelectedItem as ComboBoxItem).Tag;
-
-                switch (tag)
+                Services.Filter += (obj) =>
                 {
-                    case "All":
-                        NumberServise.Text = Services.Cast<object>().Count().ToString();
-                        return true;
+                    var service = obj as Service;
 
-                    case "ZeroBeforeFive":
-                        if (service.Discount >= 0 && service.Discount <= 5)
-                            return true;
-                        break;
+                    var tag = (FilterServices.SelectedItem as ComboBoxItem).Tag;
 
-                    case "FiveBeforeFifteen":
-                        if (service.Discount >= 5 && service.Discount <= 15)
-                            return true;
-                        break;
+                    switch (tag)
+                    {
+                        case "All":
+                            NumberServise.Text = Services.Cast<Service>().Count(x => x.IsDelete == true).ToString();
+                            if (service.IsDelete == true)
+                                return true;
+                            break;
 
-                    case "FifteenBeforeThirty":
-                        if (service.Discount >= 15 && service.Discount <= 30)
-                            return true;
-                        break;
+                        case "ZeroBeforeFive":
+                            if (service.Discount >= 0 && service.Discount <= 5 && service.IsDelete == true)
+                                return true;
+                            break;
 
-                    case "ThirtyBeforeSeventy":
-                        if (service.Discount >= 30 && service.Discount <= 70)
-                            return true;
-                        break;
+                        case "FiveBeforeFifteen":
+                            if (service.Discount >= 5 && service.Discount <= 15 && service.IsDelete == true)
+                                return true;
+                            break;
 
-                    case "SeventyBeforeOneHundred":
-                        if (service.Discount >= 70 && service.Discount <= 100)
-                            return true;
-                        break;
-                }
+                        case "FifteenBeforeThirty":
+                            if (service.Discount >= 15 && service.Discount <= 30 && service.IsDelete == true)
+                                return true;
+                            break;
 
-                NumberServise.Text = Services.Cast<object>().Count().ToString();
+                        case "ThirtyBeforeSeventy":
+                            if (service.Discount >= 30 && service.Discount <= 70 && service.IsDelete == true)
+                                return true;
+                            break;
 
-                return false;
-            };
+                        case "SeventyBeforeOneHundred":
+                            if (service.Discount >= 70 && service.Discount <= 100 && service.IsDelete == true)
+                                return true;
+                            break;
+                    }
+
+                    NumberServise.Text = Services.Cast<Service>().Count(x => x.IsDelete == true).ToString();
+
+                    return false;
+                };
+            }
+            else
+            {
+                Services.Filter += (obj) =>
+                {
+                    var service = obj as Service;
+
+                    var tag = (FilterServices.SelectedItem as ComboBoxItem).Tag;
+
+                    switch (tag)
+                    {
+                        case "All":
+                            NumberServise.Text = Services.Cast<Service>().Count(x => x.IsDelete != true).ToString();
+                            if (service.IsDelete == false || service.IsDelete == null)
+                                return true;
+                            break;
+
+                        case "ZeroBeforeFive":
+                            if (service.Discount >= 0 && service.Discount <= 5 && (service.IsDelete == false || service.IsDelete == null))
+                                return true;
+                            break;
+
+                        case "FiveBeforeFifteen":
+                            if (service.Discount >= 5 && service.Discount <= 15 && (service.IsDelete == false || service.IsDelete == null))
+                                return true;
+                            break;
+
+                        case "FifteenBeforeThirty":
+                            if (service.Discount >= 15 && service.Discount <= 30 && (service.IsDelete == false || service.IsDelete == null))
+                                return true;
+                            break;
+
+                        case "ThirtyBeforeSeventy":
+                            if (service.Discount >= 30 && service.Discount <= 70 && (service.IsDelete == false || service.IsDelete == null))
+                                return true;
+                            break;
+
+                        case "SeventyBeforeOneHundred":
+                            if (service.Discount >= 70 && service.Discount <= 100 && (service.IsDelete == false || service.IsDelete == null))
+                                return true;
+                            break;
+                    }
+
+                    NumberServise.Text = Services.Cast<Service>().Count(x => x.IsDelete != true).ToString();
+
+                    return false;
+                };
+            }
             #endregion
         }
         #endregion
@@ -173,14 +226,25 @@ namespace LearnSchool.Pages
                 return;
 
             Service service = ServiceList.SelectedItem as Service;
+
+            if (service == null)
+                return;
+
             service.IsDelete = true;
             DBConnect.db.SaveChanges();
             Services.Refresh();
             NumberServise.Text = Services.Cast<object>().Count().ToString();
         }
 
+        private void CheckBox_Checked(object sender, RoutedEventArgs e) => FilterAndSearch();
+
         private void AddServiceBtn_Click(object sender, RoutedEventArgs e) 
             => MainWindow.Instance.MyFrame.Navigate(new EditServicePage(new Service()));
         #endregion
+
+        private void SeeDeletedService_Checked(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

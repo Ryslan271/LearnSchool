@@ -40,6 +40,8 @@
             </ComboBox>
             <TextBlock Margin="5">Название или описание</TextBlock>
             <TextBox Width="150" x:Name="NameDisSearchTb"/>
+            <TextBlock Margin="15 0 0 0" Text="Удаленные услугу" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <CheckBox x:Name="SeeDeletedService" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10 0 20 0" Checked="CheckBox_Checked" Unchecked="CheckBox_Checked" IsChecked="False"/>
         </StackPanel>
 
         <ListBox Grid.Row="1" x:Name="ServiceList" ItemsSource="{Binding Path=Services}" BorderBrush="Black" d:ItemsSource="{d:SampleData ItemCount=2}" >
